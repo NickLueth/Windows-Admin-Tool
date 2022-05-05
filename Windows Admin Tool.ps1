@@ -28,7 +28,6 @@ function mainMenu {
 
 #Function to prompt the user when they are done reading the information
 function allDone {
-
     read-Host -prompt "Press [Enter] when done."
 }
 
@@ -36,7 +35,7 @@ function allDone {
 function task1 {
     $csv = read-host -prompt "Would you like to save results to a csv?(Y/N)"
         if ($csv -eq "Y"){
-            $path = read-host -prompt "Enter save path(ex. C:\Users\MyUser\Desktop\)"
+            $path = read-host -prompt "Enter save path(ex. C:\Users\MyUser\Desktop)"
             $name = read-host -prompt "Enter file name(ex. processes.csv)"
             $process = read-host -prompt "Would you like to search for a specific process? (Y/N)"
             if ($process -eq "Y"){
@@ -248,8 +247,9 @@ function email{
 function task6 {
     $download = read-host -prompt "Would you like to download the allitems.csv file?(Y/N)"
         if ($download -eq "Y"){
-            Invoke-WebRequest -URI https://cve.mitre.org/data/downloads/allitems.csv -OutFile C:\Users\MyUser\Desktop\allitems.csv
-            Write-Host "The csv file has been downloaded to C:\Users\MyUser\Desktop\allitems.csv"
+            $uname = [System.Environment]::UserName
+            Invoke-WebRequest -URI https://cve.mitre.org/data/downloads/allitems.csv -OutFile C:\Users\$uname\Desktop\allitems.csv
+            Write-Host "The csv file has been downloaded to ex. C:\Users\$uname\Desktop\allitems.csv"
 
         }elseif ($download -eq "N"){
             $cveFile = import-csv ex. C:\users\User\Desktop\allitems.csv
