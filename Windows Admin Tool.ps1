@@ -40,7 +40,7 @@ function task1 {
             $process = read-host -prompt "Would you like to search for a specific process? (Y/N)"
             if ($process -eq "Y"){
                 $whichProcess = read-host -prompt "Which process?"
-                Get-Process $whichProcess | Export-Csv -NoTypeInformation -Path $path\$name
+                Get-Process *$whichProcess* | Export-Csv -NoTypeInformation -Path $path\$name
                 $there = Test-Path $path\$name
                 if ($there -eq "True"){
                     Write-Host "The file has been saved to $path\$name"
@@ -62,9 +62,9 @@ function task1 {
             $process = read-host -prompt "Would you like to search for a specific process? (Y/N)"
             if ($process -eq "Y"){
                 $whichProcess = read-host -prompt "Which process?"
-                Get-Process $whichProcess | out-host
+                Get-Process *$whichProcess*
             }elseif ($process -eq "N"){
-                Get-Process | out-host
+                Get-Process
             }else{
                 break
             }
@@ -83,7 +83,7 @@ function task2 {
             $service = read-host -prompt "Would you like to search for a specific Service? (Y/N)"
             if ($service -eq "Y"){
                 $whichService = read-host -prompt "Which Service?"
-                Get-Service $whichService | where {$_.Status -eq "Running"} | Export-Csv -NoTypeInformation -Path $path\$name
+                Get-Service *$whichService* | where {$_.Status -eq "Running"} | Export-Csv -NoTypeInformation -Path $path\$name
                 $there = Test-Path $path\$name
                 if ($there -eq "True"){
                     Write-Host "The file has been saved to $path\$name"
@@ -105,7 +105,7 @@ function task2 {
             $service = read-host -prompt "Would you like to search for a specific service? (Y/N)"
             if ($service -eq "Y"){
                 $whichService = read-host -prompt "Which service?"
-                Get-Service $whichService | where {$_.Status -eq "Running"} | out-host
+                Get-Service *$whichService* | where {$_.Status -eq "Running"}
             }elseif ($service -eq "N"){
                 Get-Service | where {$_.Status -eq "Running"}
             }else{
@@ -147,7 +147,7 @@ function task3 {
             $package = read-host -prompt "Would you like to search for a specific package? (Y/N)"
             if ($package -eq "Y"){
                 $whichPackage = read-host -prompt "Which service?"
-                Get-Package | where {$_.Name -ilike "*$whichPackage*"} | Select Name, Version, InstallDate | out-host
+                Get-Package | where {$_.Name -ilike "*$whichPackage*"} | Select Name, Version, InstallDate
             }elseif ($package -eq "N"){
                 Get-Package | Select Name, Version, InstallDate
             }else{
@@ -245,79 +245,66 @@ function email{
 
 #Asks to download or load file for use. Searches CVE file for name of file or description keyword
 function task6 {
+    $uname = [System.Environment]::UserName
+    $notFound = "true"
+    $count = 0
     $download = read-host -prompt "Would you like to download the allitems.csv file?(Y/N)"
         if ($download -eq "Y"){
-            $uname = [System.Environment]::UserName
             Invoke-WebRequest -URI https://cve.mitre.org/data/downloads/allitems.csv -OutFile C:\Users\$uname\Desktop\allitems.csv
             Write-Host "The csv file has been downloaded to ex. C:\Users\$uname\Desktop\allitems.csv"
 
         }elseif ($download -eq "N"){
-            $cveFile = import-csv ex. C:\users\User\Desktop\allitems.csv
+            $cveFile = import-csv -Path C:\Users\$uname\Desktop\allitems.csv -Header "Name", "Status", "Description", "References"
             $nameDesc = Read-Host -Prompt "Would you like to search by CVE name or description?(N/D)"
-            if ($nameDesc = "N"){
+            if ($nameDesc -eq "N"){
                 $name = Read-Host -Prompt "Enter the name of the file. (Ex. CVE-1999-0001)"
            
                 #Searches through the CVE file    
                 foreach ($cveEntry in $cveFile) {
-            
+
+                    # Testing code
+                    #write-host "Entry: "$cveEntry
+                    #write-host "CVEName: "$cveEntry.Name
+                    #write-host "Input value: "$name
+                    #allDone
+
                     #If the entry is found "found" will get printed and the data will be printed    
-                    if ($cveEntry.Name -eq "$name") {
-                        Write-Host "Found!"
-                        $entryName = $cveEntry.Name
-                        $entryDesc = $cveEntry.Description
-                        $entryStatus = $cveEntry.Status
-
-                        write-host "CVE NAME: $entryName"
-                        Write-Host "CVE DESC: $entryDesc"
-                        Write-Host "CVE STAT: $entryStatus"     
-                        $notFound = "false"
-                        email
-                        break
-                    }else{
-                    
-                        #If not found the script will continue
-                        if ($notFound -eq "false") {
-
-                            continue
-
-                        } else {
-
-                            # Set value to "true" if no entry is found.
-                            $notFound = "true"
-                        }
-
+                    if ($cveEntry.Name -ilike "*$name*") {
+                        Write-Host "CVE Found!"
+                        write-host "CVE NAME: "$cveEntry.Name
+                        Write-Host "CVE DESC: "$cveEntry.Description
+                        Write-Host "CVE STAT: "$cveEntry.Status  
+                        Write-Host "CVE REF: "$cveEntry.References
+                        Write-Host "_______________________________________________"
+                        $notFound = "false"  
+                        $count++
                     }
                 }
-            }elseif ($nameDesc = "D"){
+                if ($notFound -eq "true"){
+                    Write-Host "No matches..."
+                }else{
+                    Write-Host "$count matches found..."
+                }
+            }elseif ($nameDesc -eq "D"){
                 $keyword = Read-Host -Prompt "Enter a keyword"
                 foreach ($cveEntry in $cveFile) {
                     if ($cveEntry.Description -ilike "*$keyword*") {
-    
-                        # Print that the CVE was found.
-                        write-host "Found."
-                        # Print the results for the CVE.
-                        $entryName = $cveEntry.Name
-                        $entryDesc = $cveEntry.Description
-                        $entryStatus = $cveEntry.Status
-
-                        write-host "CVE NAME: $entryName"
-                        Write-Host "CVE DESC: $entryDesc"
-                        Write-Host "CVE STAT: $entryStatus"
+                        Write-Host "CVE Found!"
+                        write-host "CVE NAME: "$cveEntry.Name
+                        Write-Host "CVE DESC: "$cveEntry.Description
+                        Write-Host "CVE STAT: "$cveEntry.Status  
+                        Write-Host "CVE REF: "$cveEntry.References
+                        Write-Host "_______________________________________________"
 
                         # Set value to false to denote the entry was found.
                         $notFound = "false"
-                        email
-                    } else {
-                        if ($notFound -eq "false") {
-
-                            continue
-
-                        } else {
-
-                            # Set value to "true" if no entry is found.
-                            $notFound = "true"
-                        }
+                        $count++
                     }
+                }
+                if ($notFound -eq "true"){
+                    Write-Host "No matches..."
+                }else{
+                    Write-Host "$count matches found..."
                 }
             }else{
                 Write-Host "Please enter a valid option"
